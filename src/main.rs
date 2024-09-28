@@ -1,9 +1,26 @@
 
 #![allow(rustdoc::missing_crate_level_docs)]
 use sha256::{digest, Sha256Digest};
+use std::fs::{File, write};
+use std::io::{Error, Write};
 use eframe::egui;
+use rfd::FileDialog;
+fn save_file(text:&String) -> bool{
+    let files = FileDialog::new()
+        .add_filter("text", &["txt", "rs"])
+        .add_filter("rust", &["rs", "toml"])
+        .set_directory("/")
+        .save_file();
+    if files == None{
+        println!("No File Provided");
+        return false
+    }
 
-
+    let path = files.unwrap();
+    println!("{:?}",path);
+    write(path, text));
+    true
+}
 //use eval::{eval, to_value};
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
@@ -14,7 +31,7 @@ fn main() -> eframe::Result {
     };
 
 
-    let mut hashes:Vec<String> =vec![];
+    let mut hashes =String::new();
     let mut text = String::new();
     let mut updatemessage:&str = "";
     let mut file_name = "File1";
@@ -25,6 +42,9 @@ fn main() -> eframe::Result {
             if ui.button("Save").clicked{
                 updatemessage = "Saved!";
                 file_name = "File1";
+
+                save_file(&text);
+                hashes = digest(&text);
             }
             ui.with_layout(egui::Layout::bottom_up(egui::Align::BOTTOM), |ui| {
                 // ui.with_layout(egui::Layout::centered_and_justified(egui::Direction::BottomUp), |ui|{
@@ -45,13 +65,11 @@ fn main() -> eframe::Result {
 
             let response = ui.add_sized(ui.available_size(), egui::TextEdit::multiline(&mut text));
             if response.changed(){
-                if hashes.iter().any(|e| digest(&text).contains(e)){
+                if hashes == digest(&text) {
                     println!("exists");
                     file_name = "File1";
 
                 }else{
-                    hashes.push(digest(&text));
-                    println!("The hashes are as follows \n {:?}",hashes);
                     file_name = "File1*";
                 }
             }
