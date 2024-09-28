@@ -4,45 +4,35 @@ use sha256::{digest, Sha256Digest};
 use std::fs::{write};
 use eframe::egui;
 use rfd::FileDialog;
-fn save_file(text:&String) -> bool{
-    let files = FileDialog::new()
-        .add_filter("text", &["txt", "rs"])
-        .add_filter("rust", &["rs", "toml"])
-        .set_directory("/")
-        .save_file();
-    if files == None{
-        println!("No File Provided");
-        return false
-    }
 
-    let path = files.unwrap();
-    println!("{:?}",path);
-    write(path, text);
-    true
-}
+
 //use eval::{eval, to_value};
 fn main() -> eframe::Result {
-    env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
+
+
 
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([720.0, 720.0]),
+        viewport: egui::ViewportBuilder::default().with_maximized(true),
         ..Default::default()
     };
 
 
     let mut hashes =String::new();
     let mut text = String::new();
-    let mut updatemessage:&str = "";
+    let mut updatemessage:String = "".to_string();
     let mut file_name = "File1";
-    eframe::run_simple_native("My egui App", options, move |ctx, _frame| {
+    eframe::run_simple_native("Rust Notes", options, move |ctx, _frame| {
         egui::SidePanel::left("my_left_panel").show(ctx, |ui| {
             ui.label("Shortcuts");
 
-            if ui.button("Save").clicked{
-                updatemessage = "Saved!";
+            if ui.button("Save As").clicked{
+                let v = save_file(&text);
+                let b = v.to_string();
+
+                updatemessage = b;
                 file_name = "File1";
 
-                save_file(&text);
+
                 hashes = digest(&text);
             }
             ui.with_layout(egui::Layout::bottom_up(egui::Align::BOTTOM), |ui| {
@@ -50,7 +40,7 @@ fn main() -> eframe::Result {
                 //     ui.label("test");
                 // }
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
-                    ui.label(format!("'{updatemessage}'"));
+                    ui.label(format!("{updatemessage}"));
 
 
 
@@ -76,4 +66,21 @@ fn main() -> eframe::Result {
 
         });
     })
+}
+fn save_file(text:&String) -> String{
+    let files = FileDialog::new()
+        .add_filter("text", &["txt", "rs"])
+        .add_filter("rust", &["rs", "toml"])
+        .set_directory("/")
+        .save_file();
+    if files == None{
+
+            return "No File Specified!".to_string()
+    }
+
+    let path = files.unwrap();
+
+    write(path.clone(), text);
+    return format!("saved to {:?}",path)
+
 }
