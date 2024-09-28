@@ -18,7 +18,7 @@ fn save_file(text:&String) -> bool{
 
     let path = files.unwrap();
     println!("{:?}",path);
-    write(path, text));
+    write(path, text);
     true
 }
 //use eval::{eval, to_value};
