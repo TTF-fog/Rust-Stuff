@@ -24,7 +24,7 @@ fn main() -> eframe::Result {
 
             if ui.button("Save").clicked{
                 updatemessage = "Saved!";
-
+                file_name = "File1";
             }
             ui.with_layout(egui::Layout::bottom_up(egui::Align::BOTTOM), |ui| {
                 // ui.with_layout(egui::Layout::centered_and_justified(egui::Direction::BottomUp), |ui|{
@@ -41,18 +41,18 @@ fn main() -> eframe::Result {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading(fileName);
+            ui.heading(file_name);
 
-            let response = ui.add_sized(ui.available_size(), egui::TextEdit::multiline(&mut Text));
+            let response = ui.add_sized(ui.available_size(), egui::TextEdit::multiline(&mut text));
             if response.changed(){
-                if hashes.iter().any(|e| digest(&Text).contains(e)){
+                if hashes.iter().any(|e| digest(&text).contains(e)){
                     println!("exists");
-                    fileName = "File1";
+                    file_name = "File1";
 
                 }else{
-                    hashes.push(digest(&Text));
+                    hashes.push(digest(&text));
                     println!("The hashes are as follows \n {:?}",hashes);
-                    fileName = "File1*";
+                    file_name = "File1*";
                 }
             }
 
