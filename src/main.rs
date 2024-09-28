@@ -1,8 +1,7 @@
 
 #![allow(rustdoc::missing_crate_level_docs)]
 use sha256::{digest, Sha256Digest};
-use std::fs::{File, write};
-use std::io::{Error, Write};
+use std::fs::{write};
 use eframe::egui;
 use rfd::FileDialog;
 fn save_file(text:&String) -> bool{
