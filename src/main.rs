@@ -2,7 +2,7 @@
 #![allow(rustdoc::missing_crate_level_docs)]
 use sha256::{digest, Sha256Digest};
 use eframe::egui;
-use egui::util::hash;
+
 
 //use eval::{eval, to_value};
 fn main() -> eframe::Result {
@@ -15,9 +15,9 @@ fn main() -> eframe::Result {
 
 
     let mut hashes:Vec<String> =vec![];
-    let mut Text = String::new();
+    let mut text = String::new();
     let mut updatemessage:&str = "";
-    let mut fileName = "File1";
+    let mut file_name = "File1";
     eframe::run_simple_native("My egui App", options, move |ctx, _frame| {
         egui::SidePanel::left("my_left_panel").show(ctx, |ui| {
             ui.label("Shortcuts");
@@ -47,9 +47,12 @@ fn main() -> eframe::Result {
             if response.changed(){
                 if hashes.iter().any(|e| digest(&Text).contains(e)){
                     println!("exists");
+                    fileName = "File1";
+
                 }else{
                     hashes.push(digest(&Text));
                     println!("The hashes are as follows \n {:?}",hashes);
+                    fileName = "File1*";
                 }
             }
 
