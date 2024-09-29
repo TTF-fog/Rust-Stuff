@@ -2,10 +2,9 @@
 #![allow(rustdoc::missing_crate_level_docs)]
 use sha256::{digest, Sha256Digest};
 use std::fs::{File, write};
-use std::io::{Read, read_to_string};
+use std::io::{Read};
 use std::path::PathBuf;
 use eframe::egui;
-use egui::debug_text::print;
 use rfd::FileDialog;
 
 
