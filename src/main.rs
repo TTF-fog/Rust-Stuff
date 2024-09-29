@@ -37,8 +37,9 @@ fn main() -> eframe::Result {
             }
             if ui.button("Load").clicked{
                  u = load_file();
-
-                indicator = false;
+                if u[2] == "" {
+                    indicator = false;
+                }
 
                 updatemessage = String::from(&u[0]);
 
@@ -89,7 +90,6 @@ fn main() -> eframe::Result {
                 if hashes == digest(&text) {
                     println!("exists");
                     file_name = "File1".parse().unwrap();
-
                 }else{
                     file_name = "File1*".parse().unwrap();
                 }
@@ -127,7 +127,7 @@ fn load_file() -> Vec<String> {
         .pick_file();
     if files == None{
 
-        return vec!["No File Specified!".to_string() ,  "".to_string()]
+        return vec!["No File Specified!".to_string() ,  "".to_string(),"".to_string()]
     }
 
     let path = files.unwrap();
