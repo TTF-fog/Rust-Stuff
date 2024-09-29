@@ -15,7 +15,7 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
 
-
+    let mut glob_save_location = String::new();
     let mut hashes =String::new();
     let mut text = String::new();
     let mut updatemessage: String = "".to_string();
@@ -28,16 +28,23 @@ fn main() -> eframe::Result {
 
             if ui.button("Save As").clicked{
                 let v = save_file(&text);
-                updatemessage = v;
+                glob_save_location = v;
+                updatemessage = format!("saved to {}",glob_save_location);
                 file_name = "File1".parse().unwrap();
+                if updatemessage != "No File Specified!"{
 
+                    indicator=false;
+                }
 
 
             }
             if ui.button("Load").clicked{
                  u = load_file();
-                if u[2] == "" {
+
+                if u[2] != "fudge" {
+                    println!("indicator true");
                     indicator = false;
+                    glob_save_location = u[2].clone();
                 }
 
                 updatemessage = String::from(&u[0]);
@@ -51,10 +58,10 @@ fn main() -> eframe::Result {
                     updatemessage = String::from("No save location, try Save As");
                 }
                 else{
-                    write(PathBuf::from(&u[0]), &text).expect("TODO: panic message");
+                    write(PathBuf::from(&glob_save_location), &text).expect("TODO: panic message");
                     hashes = digest(&text);
-
-                    file_name = file_name.replace("/","*");
+                    println!("{}", file_name.replace("*", ""));
+                    file_name = file_name.replace("*","");
                 }
 
             }
@@ -113,8 +120,8 @@ fn save_file(text:&String) -> String{
     println!("{:?}", path);
 
     write(path.clone(), text);
-    return format!("saved  to {:?}",path)
 
+    return path.to_string_lossy().to_string()
 }
 
 
@@ -126,7 +133,7 @@ fn load_file() -> Vec<String> {
         .pick_file();
     if files == None{
 
-        return vec!["No File Specified!".to_string() ,  "".to_string(),"".to_string()]
+        return vec!["No File Specified!".to_string() ,  "".to_string(),"fudge".to_string()]
     }
 
     let path = files.unwrap();
