@@ -1,16 +1,16 @@
 
 #![allow(rustdoc::missing_crate_level_docs)]
 use sha256::{digest, Sha256Digest};
-use std::fs::{write};
+use std::fs::{File, write};
+use std::io::{Read, read_to_string};
+use std::path::PathBuf;
 use eframe::egui;
+use egui::debug_text::print;
 use rfd::FileDialog;
 
 
 //use eval::{eval, to_value};
 fn main() -> eframe::Result {
-
-
-
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_maximized(true),
         ..Default::default()
@@ -19,47 +19,79 @@ fn main() -> eframe::Result {
 
     let mut hashes =String::new();
     let mut text = String::new();
-    let mut updatemessage:String = "".to_string();
-    let mut file_name = "File1";
-    eframe::run_simple_native("Rust Notes", options, move |ctx, _frame| {
+    let mut updatemessage: String = "".to_string();
+    let mut file_name:String = "File1".to_string();
+    let mut indicator:bool = true;
+    let mut u:Vec<String> = vec![];
+    eframe::run_simple_native("Rust Notes", options.clone(), move |ctx, _frame| {
         egui::SidePanel::left("my_left_panel").show(ctx, |ui| {
             ui.label("Shortcuts");
 
             if ui.button("Save As").clicked{
                 let v = save_file(&text);
-                let b = v.to_string();
-
-                updatemessage = b;
-                file_name = "File1";
+                updatemessage = v;
+                file_name = "File1".parse().unwrap();
 
 
-                hashes = digest(&text);
+
             }
+            if ui.button("Load").clicked{
+                 u = load_file();
+
+                indicator = false;
+
+                updatemessage = String::from(&u[0]);
+
+                text = String::from(&u[2]);
+                hashes = digest(&text);
+
+            }
+            if ui.button("Save").clicked{
+                if indicator == true {
+                    updatemessage = String::from("No save location, try Save As");
+                }
+                else{
+                    write(PathBuf::from(&u[0]), &text).expect("TODO: panic message");
+                    hashes = digest(&text);
+
+                    file_name = file_name.replace("/","*");
+                }
+
+            }
+
+            ui.label("Recent Files");
+            for v in 1..10{
+                ui.add(egui::Label::new(v.to_string()));
+            }
+
+
             ui.with_layout(egui::Layout::bottom_up(egui::Align::BOTTOM), |ui| {
                 // ui.with_layout(egui::Layout::centered_and_justified(egui::Direction::BottomUp), |ui|{
                 //     ui.label("test");
                 // }
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
+
                     ui.label(format!("{updatemessage}"));
+                });
+                ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
 
-
-
+                    ui.label("Time Spent Editing");
                 });
             });
 
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading(file_name);
+            ui.heading(file_name.as_str());
 
             let response = ui.add_sized(ui.available_size(), egui::TextEdit::multiline(&mut text));
             if response.changed(){
                 if hashes == digest(&text) {
                     println!("exists");
-                    file_name = "File1";
+                    file_name = "File1".parse().unwrap();
 
                 }else{
-                    file_name = "File1*";
+                    file_name = "File1*".parse().unwrap();
                 }
             }
 
@@ -79,8 +111,34 @@ fn save_file(text:&String) -> String{
     }
 
     let path = files.unwrap();
+    println!("{:?}", path);
 
     write(path.clone(), text);
-    return format!("saved to {:?}",path)
+    return format!("saved  to {:?}",path)
 
 }
+
+
+fn load_file() -> Vec<String> {
+    let files = FileDialog::new()
+        .add_filter("text", &["txt", "rs"])
+        .add_filter("rust", &["rs", "toml"])
+        .set_directory("/")
+        .pick_file();
+    if files == None{
+
+        return vec!["No File Specified!".to_string() ,  "".to_string()]
+    }
+
+    let path = files.unwrap();
+
+
+    let mut f = File::open(&path);
+    let mut data =String::new();
+    f.unwrap().read_to_string(&mut data);
+
+    return vec![path.to_string_lossy().parse().unwrap(), "".to_string(), data]
+
+}
+
+
