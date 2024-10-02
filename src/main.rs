@@ -1,20 +1,26 @@
 
 #![allow(rustdoc::missing_crate_level_docs)]
-use sha256::{digest, Sha256Digest};
+use sha256::{digest};
 use std::fs::{File, write};
 use std::io::{Read};
 use std::path::PathBuf;
 use eframe::egui;
 use rfd::FileDialog;
-
-
-//use eval::{eval, to_value};
+use std::time::Instant;
+use stopwatch;
+use stopwatch::Stopwatch;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use chrono::{DateTime, Utc};
+// TODO: scroll textedit
+fn seconds_to_timestamp(seconds: u64) -> DateTime<Utc> {
+    let system_time = SystemTime::now() - Duration::from_secs(seconds);
+    DateTime::<Utc>::from(system_time)
+}
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_maximized(true),
         ..Default::default()
     };
-
     let mut glob_save_location = String::new();
     let mut hashes =String::new();
     let mut text = String::new();
@@ -22,6 +28,9 @@ fn main() -> eframe::Result {
     let mut file_name:String = "File1".to_string();
     let mut indicator:bool = true;
     let mut u:Vec<String> = vec![];
+    let mut save_time: Instant = Instant::now();
+    let mut sw = Stopwatch::new();
+    let mut total_time: u64 = 0;
     eframe::run_simple_native("Rust Notes", options.clone(), move |ctx, _frame| {
         egui::SidePanel::left("my_left_panel").show(ctx, |ui| {
             ui.label("Shortcuts");
@@ -32,26 +41,19 @@ fn main() -> eframe::Result {
                 updatemessage = format!("saved to {}",glob_save_location);
                 file_name = "File1".parse().unwrap();
                 if updatemessage != "No File Specified!"{
-
                     indicator=false;
                 }
-
-
             }
             if ui.button("Load").clicked{
                  u = load_file();
-
                 if u[2] != "fudge" {
                     println!("indicator true");
                     indicator = false;
                     glob_save_location = u[2].clone();
                 }
-
                 updatemessage = String::from(&u[0]);
-
                 text = String::from(&u[2]);
                 hashes = digest(&text);
-
             }
             if ui.button("Save").clicked{
                 if indicator == true {
@@ -63,15 +65,11 @@ fn main() -> eframe::Result {
                     println!("{}", file_name.replace("*", ""));
                     file_name = file_name.replace("*","");
                 }
-
             }
-
             ui.label("Recent Files");
             for v in 1..10{
                 ui.add(egui::Label::new(v.to_string()));
             }
-
-
             ui.with_layout(egui::Layout::bottom_up(egui::Align::BOTTOM), |ui| {
                 // ui.with_layout(egui::Layout::centered_and_justified(egui::Direction::BottomUp), |ui|{
                 //     ui.label("test");
@@ -82,17 +80,28 @@ fn main() -> eframe::Result {
                 });
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
 
-                    ui.label("Time Spent Editing");
+                    ui.label(format!("Time Spent Editing: {} (seconds)", seconds_to_timestamp(total_time)));
                 });
             });
 
         });
+        if (Instant::now()- save_time).as_secs_f64() as i32 >= 10 {
+            sw.stop();
+            total_time = (sw.elapsed_ms() as u64);
+        }else{
+
+        }
+
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading(file_name.as_str());
 
             let response = ui.add_sized(ui.available_size(), egui::TextEdit::multiline(&mut text));
             if response.changed(){
+                if (text.chars().count() as i32 >= 1){
+                    sw.start();
+                }
+                save_time = Instant::now();
                 if hashes == digest(&text) {
                     println!("exists");
                     file_name = "File1".parse().unwrap();
@@ -139,9 +148,9 @@ fn load_file() -> Vec<String> {
     let path = files.unwrap();
 
 
-    let mut f = File::open(&path);
+    let f = File::open(&path);
     let mut data =String::new();
-    f.unwrap().read_to_string(&mut data);
+    f.expect("").read_to_string(&mut data);
 
     return vec![path.to_string_lossy().parse().unwrap(), "".to_string(), data]
 
