@@ -1,5 +1,8 @@
 
 #![allow(rustdoc::missing_crate_level_docs)]
+
+mod config;
+
 use sha256::{digest};
 use std::fs::{File, write};
 use std::io::{Read};
@@ -9,13 +12,8 @@ use rfd::FileDialog;
 use std::time::Instant;
 use stopwatch;
 use stopwatch::Stopwatch;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use chrono::{DateTime, Utc};
 // TODO: scroll textedit
-fn seconds_to_timestamp(seconds: u64) -> DateTime<Utc> {
-    let system_time = SystemTime::now() - Duration::from_secs(seconds);
-    DateTime::<Utc>::from(system_time)
-}
+
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_maximized(true),
@@ -31,6 +29,7 @@ fn main() -> eframe::Result {
     let mut save_time: Instant = Instant::now();
     let mut sw = Stopwatch::new();
     let mut total_time: u64 = 0;
+    config::main();
     eframe::run_simple_native("Rust Notes", options.clone(), move |ctx, _frame| {
         egui::SidePanel::left("my_left_panel").show(ctx, |ui| {
             ui.label("Shortcuts");
@@ -67,9 +66,10 @@ fn main() -> eframe::Result {
                 }
             }
             ui.label("Recent Files");
-            for v in 1..10{
-                ui.add(egui::Label::new(v.to_string()));
-            }
+            let recent_files = config::read_recent();
+            // for v in 1..10{
+            //     ui.add(egui::Label::new(v.to_string()));
+            // }
             ui.with_layout(egui::Layout::bottom_up(egui::Align::BOTTOM), |ui| {
                 // ui.with_layout(egui::Layout::centered_and_justified(egui::Direction::BottomUp), |ui|{
                 //     ui.label("test");
@@ -80,7 +80,7 @@ fn main() -> eframe::Result {
                 });
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
 
-                    ui.label(format!("Time Spent Editing: {} (seconds)", seconds_to_timestamp(total_time)));
+                    ui.label(format!("Time Spent Editing: {} (seconds)", (total_time)));
                 });
             });
 
